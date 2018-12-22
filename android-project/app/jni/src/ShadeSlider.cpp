@@ -25,10 +25,25 @@
 int main(int argc, char** argv)
 {
     // Setup SDL
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC) != 0)
     {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error: %s\n", SDL_GetError());
         return EXIT_FAILURE;
+    }
+
+    SDL_Haptic *haptic = SDL_HapticOpen(0);
+    if (!haptic)
+    {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s",
+            "This device does not support haptic feedback\n");
+    }
+    else
+    {
+        if (SDL_HapticRumbleInit(haptic) < 0)
+        {
+            SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s%s",
+                "SDL haptic did not initialize the rumble\n", SDL_GetError());
+        }
     }
 
     SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
@@ -142,6 +157,11 @@ int main(int argc, char** argv)
                 counter++;
             ImGui::SameLine();
             ImGui::Text("counter = %d", counter);
+
+            if (counter == 1) {
+                if (SDL_HapticRumblePlay(haptic, 0.75, 500) != 0)
+                    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", SDL_GetError());
+            }
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
