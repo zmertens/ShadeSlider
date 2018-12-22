@@ -66,3 +66,6 @@ fastlane/readme.md
 
 # SimpleDirectMediaLayer lib
 SDL*
+
+# More files to ignore
+android-project/.settings
