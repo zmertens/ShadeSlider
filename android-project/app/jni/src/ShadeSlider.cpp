@@ -106,9 +106,19 @@ int main(int argc, char** argv)
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
 
-    bool show_demo_window = true;
-    bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    static bool drag_and_drop = false;
+    static bool options_menu = false;
+    static bool alpha_half_preview = false;
+    static bool alpha_preview = true;
+    static bool hdr = false;
+    static ImVec4 color_to_match = ImColor(114, 144, 154, 200);
+
+    int misc_flags = (hdr ? ImGuiColorEditFlags_HDR : 0) \
+        | (drag_and_drop ? 0 : ImGuiColorEditFlags_NoDragDrop) \
+        | (alpha_half_preview ? ImGuiColorEditFlags_AlphaPreviewHalf : (alpha_preview ? ImGuiColorEditFlags_AlphaPreview : 0)) \
+        | (options_menu ? 0 : ImGuiColorEditFlags_NoOptions);
+
 
     // Main loop
     bool done = false;
@@ -143,8 +153,8 @@ int main(int argc, char** argv)
             ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
     
             ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
+            ImGui::Checkbox("Demo Window", &hdr);      // Edit bools storing our window open/close state
+            ImGui::Checkbox("Another Window", &hdr);
 
             ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
@@ -162,6 +172,21 @@ int main(int argc, char** argv)
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
         }
+
+        // the color to match to
+        // ImGui::ColorButton("MyColor##3c", *(ImVec4*)&color_to_match, misc_flags, ImVec2(80,80));
+
+    //  ImGuiColorEditFlags flags = misc_flags;
+    //     if (!alpha) flags |= ImGuiColorEditFlags_NoAlpha; // This is by default if you call ColorPicker3() instead of ColorPicker4()
+    //     if (alpha_bar) flags |= ImGuiColorEditFlags_AlphaBar;
+    //     if (!side_preview) flags |= ImGuiColorEditFlags_NoSidePreview;
+    //     if (picker_mode == 1) flags |= ImGuiColorEditFlags_PickerHueBar;
+    //     if (picker_mode == 2) flags |= ImGuiColorEditFlags_PickerHueWheel;
+    //     if (inputs_mode == 1) flags |= ImGuiColorEditFlags_NoInputs;
+    //     if (inputs_mode == 2) flags |= ImGuiColorEditFlags_RGB;
+    //     if (inputs_mode == 3) flags |= ImGuiColorEditFlags_HSV;
+    //     if (inputs_mode == 4) flags |= ImGuiColorEditFlags_HEX;
+    //     ImGui::ColorPicker4("MyColor##4", (float*)&color, flags, ref_color ? &ref_color_v.x : NULL);
 
         glViewport(0, 0, (int) io.DisplaySize.x, (int) io.DisplaySize.y);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
