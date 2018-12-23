@@ -37,6 +37,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <random>
+
 #include <SDL.h>
 
 #include <GLES3/gl3.h>
@@ -45,6 +47,20 @@
 
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>
+
+// float get_random_float(int low, int high)
+// {
+//     static const int seed = 0;
+//     // std::random_device rd;
+//     std::mt19937_64 mt (seed);
+//     std::uniform_real_distribution<float> dist (low, high);
+//     return dist (mt);
+// }
+
+float mix(float a, float b, float t)
+{
+    return a * (1.f - t) + b * t;
+}
 
 // Taken from `imgui_demo.cpp`
 static void ShowHelpMarker(const char* desc)
@@ -159,9 +175,9 @@ int main(int argc, char** argv)
     static bool drag_and_drop = false;
     static bool options_menu = false;
     static bool alpha_half_preview = false;
-    static bool alpha_preview = true;
+    static bool alpha_preview = false;
     static bool hdr = false;
-    static ImVec4 color_to_match = ImColor(114, 144, 154, 200);
+    static ImVec4 color_to_match = ImColor(255, 255, 255, 200);
     static ImVec4 color_to_pick = ImColor(0, 0, 0, 255);
     static ImVec4 ref_color_v (1.0f, 0.0f, 1.0f, 0.5f);
 
@@ -202,7 +218,7 @@ int main(int argc, char** argv)
         ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_Always);
         ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, io.DisplaySize.y), ImGuiSetCond_Always);
         ImGui::Begin("Hello, world!", &window_close_widget, window_flags);                          // Create a window called "Hello, world!" and append into it.
-
+        ShowHelpMarker("This is a help marker. Match the colors");
         // ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
         // ImGui::Checkbox("Demo Window", &hdr);      // Edit bools storing our window open/close state
         // ImGui::Checkbox("Another Window", &hdr);
@@ -225,6 +241,8 @@ int main(int argc, char** argv)
         // the color to match to
         ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.95f);
         ImGui::ColorButton("MyColor##3c", *(ImVec4*)&color_to_match, misc_flags, ImVec2(100, 100));
+        ImGui::SameLine();
+        ImGui::ColorButton("MyColor##4c", *(ImVec4*)&color_to_pick, misc_flags, ImVec2(100, 100));
         // ImGui::SameLine();
         // These flags are separated because they can't all be used at once
         // See imgui_widgets.cpp:4100 `ImIsPowerOfTwo` assertion
@@ -232,6 +250,7 @@ int main(int argc, char** argv)
         // This is by default if you call ColorPicker3() instead of ColorPicker4()
         flags |= ImGuiColorEditFlags_NoAlpha;
         // flags |= ImGuiColorEditFlags_AlphaBar;
+        flags |= ImGuiColorEditFlags_NoLabel;
 
         flags |= ImGuiColorEditFlags_NoSidePreview;
         
@@ -246,6 +265,18 @@ int main(int argc, char** argv)
         ImGui::PopItemWidth();
         ImGui::End();
 
+        if (clear_color.x < 1.f)
+        {
+            clear_color.x += static_cast<float>(SDL_GetTicks());
+            clear_color.y += static_cast<float>(SDL_GetTicks());
+            clear_color.z += static_cast<float>(SDL_GetTicks());
+        }
+        else
+        {
+            clear_color.x -= static_cast<float>(SDL_GetTicks());
+            clear_color.y -= static_cast<float>(SDL_GetTicks());
+            clear_color.z -= static_cast<float>(SDL_GetTicks());
+        }
 
         glViewport(0, 0, (int) io.DisplaySize.x, (int) io.DisplaySize.y);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
