@@ -3,7 +3,7 @@
 //  Goal: Move the picker to match the reference image
 //
 // BSD-3-Clause LICENSE
-// Zach Mertens-McConnell
+// Zach Mertens-McConnell @github/zmertens
 ///////////////////////////////////////////////////////////
 
 
@@ -95,8 +95,8 @@ int main(int argc, char** argv)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    // Android issue: NoMouseCursorChange config on SDL_SetCursor is called which is an error
-    io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange | ImGuiConfigFlags_NavEnableKeyboard;
+    // Android issue: Without NoMouseCursorChange config enabled SDL_SetCursor is called
+    io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;// | ImGuiConfigFlags_NavEnableKeyboard;
 
     // Setup Platform/Renderer bindings
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
@@ -133,10 +133,6 @@ int main(int argc, char** argv)
         ImGui_ImplSDL2_NewFrame(window);
         ImGui::NewFrame();
 
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
-
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
             static float f = 0.0f;
@@ -167,17 +163,6 @@ int main(int argc, char** argv)
             ImGui::End();
         }
 
-        // 3. Show another simple window.
-        if (show_another_window)
-        {
-            ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
-        }
-
         glViewport(0, 0, (int) io.DisplaySize.x, (int) io.DisplaySize.y);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -195,6 +180,7 @@ int main(int argc, char** argv)
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
 
+    SDL_HapticClose(haptic);
     SDL_GL_DeleteContext(gl_context);
     SDL_DestroyWindow(window);
     SDL_Quit();
