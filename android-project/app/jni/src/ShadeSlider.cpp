@@ -146,7 +146,8 @@ int main(int argc, char** argv)
     static bool alpha_preview = true;
     static bool hdr = false;
     static ImVec4 color_to_match = ImColor(114, 144, 154, 200);
-    static ImVec4 ref_color = ImColor(1.0f, 0.0f, 1.0f, 0.5f);
+    static ImVec4 color_to_pick = ImColor(0, 0, 0, 255);
+    static ImVec4 ref_color_v (1.0f, 0.0f, 1.0f, 0.5f);
 
     int misc_flags = (hdr ? ImGuiColorEditFlags_HDR : 0) \
         | (drag_and_drop ? 0 : ImGuiColorEditFlags_NoDragDrop) \
@@ -204,21 +205,26 @@ int main(int argc, char** argv)
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
-       // the color to match to
+        // the color to match to
         ImGui::ColorButton("MyColor##3c", *(ImVec4*)&color_to_match, misc_flags, ImVec2(100, 100));
-
-        ImGuiColorEditFlags flags = misc_flags;
+        // ImGui::SameLine();
+        // These flags are separated because they can't all be used at once
+        // See imgui_widgets.cpp:4100 `ImIsPowerOfTwo` assertion
+        ImGuiColorEditFlags flags;
         // This is by default if you call ColorPicker3() instead of ColorPicker4()
         flags |= ImGuiColorEditFlags_NoAlpha;
-        flags |= ImGuiColorEditFlags_AlphaBar;
+        // flags |= ImGuiColorEditFlags_AlphaBar;
+
         flags |= ImGuiColorEditFlags_NoSidePreview;
+        
         flags |= ImGuiColorEditFlags_PickerHueBar;
-        flags |= ImGuiColorEditFlags_PickerHueWheel;
+        // flags |= ImGuiColorEditFlags_PickerHueWheel;
+
         flags |= ImGuiColorEditFlags_NoInputs;
-        flags |= ImGuiColorEditFlags_RGB;
-        flags |= ImGuiColorEditFlags_HSV;
-        flags |= ImGuiColorEditFlags_HEX;
-        // ImGui::ColorPicker4("MyColor##4", (float*)&clear_color, flags, NULL);
+        // flags |= ImGuiColorEditFlags_RGB;
+        // flags |= ImGuiColorEditFlags_HSV;
+        // flags |= ImGuiColorEditFlags_HEX;
+        ImGui::ColorPicker4("MyColor##4", (float*)&color_to_pick, flags, &ref_color_v.x);
 
         ImGui::End();
 
