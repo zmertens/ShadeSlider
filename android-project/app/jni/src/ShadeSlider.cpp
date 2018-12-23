@@ -146,6 +146,7 @@ int main(int argc, char** argv)
     static bool alpha_preview = true;
     static bool hdr = false;
     static ImVec4 color_to_match = ImColor(114, 144, 154, 200);
+    static ImVec4 ref_color = ImColor(1.0f, 0.0f, 1.0f, 0.5f);
 
     int misc_flags = (hdr ? ImGuiColorEditFlags_HDR : 0) \
         | (drag_and_drop ? 0 : ImGuiColorEditFlags_NoDragDrop) \
@@ -180,7 +181,7 @@ int main(int argc, char** argv)
         static float f = 0.0f;
         static int counter = 0;
         
-        // ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.05, io.DisplaySize.y * 0.05), ImGuiSetCond_Once);
+        ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_Always);
         ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, io.DisplaySize.y), ImGuiSetCond_Always);
         ImGui::Begin("Hello, world!", &window_close_widget, window_flags);                          // Create a window called "Hello, world!" and append into it.
 
@@ -202,22 +203,25 @@ int main(int argc, char** argv)
         }
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+       // the color to match to
+        ImGui::ColorButton("MyColor##3c", *(ImVec4*)&color_to_match, misc_flags, ImVec2(100, 100));
+
+        ImGuiColorEditFlags flags = misc_flags;
+        // This is by default if you call ColorPicker3() instead of ColorPicker4()
+        flags |= ImGuiColorEditFlags_NoAlpha;
+        flags |= ImGuiColorEditFlags_AlphaBar;
+        flags |= ImGuiColorEditFlags_NoSidePreview;
+        flags |= ImGuiColorEditFlags_PickerHueBar;
+        flags |= ImGuiColorEditFlags_PickerHueWheel;
+        flags |= ImGuiColorEditFlags_NoInputs;
+        flags |= ImGuiColorEditFlags_RGB;
+        flags |= ImGuiColorEditFlags_HSV;
+        flags |= ImGuiColorEditFlags_HEX;
+        // ImGui::ColorPicker4("MyColor##4", (float*)&clear_color, flags, NULL);
+
         ImGui::End();
 
-        // the color to match to
-        // ImGui::ColorButton("MyColor##3c", *(ImVec4*)&color_to_match, misc_flags, ImVec2(80,80));
-
-    //  ImGuiColorEditFlags flags = misc_flags;
-    //     if (!alpha) flags |= ImGuiColorEditFlags_NoAlpha; // This is by default if you call ColorPicker3() instead of ColorPicker4()
-    //     if (alpha_bar) flags |= ImGuiColorEditFlags_AlphaBar;
-    //     if (!side_preview) flags |= ImGuiColorEditFlags_NoSidePreview;
-    //     if (picker_mode == 1) flags |= ImGuiColorEditFlags_PickerHueBar;
-    //     if (picker_mode == 2) flags |= ImGuiColorEditFlags_PickerHueWheel;
-    //     if (inputs_mode == 1) flags |= ImGuiColorEditFlags_NoInputs;
-    //     if (inputs_mode == 2) flags |= ImGuiColorEditFlags_RGB;
-    //     if (inputs_mode == 3) flags |= ImGuiColorEditFlags_HSV;
-    //     if (inputs_mode == 4) flags |= ImGuiColorEditFlags_HEX;
-    //     ImGui::ColorPicker4("MyColor##4", (float*)&color, flags, ref_color ? &ref_color_v.x : NULL);
 
         glViewport(0, 0, (int) io.DisplaySize.x, (int) io.DisplaySize.y);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
