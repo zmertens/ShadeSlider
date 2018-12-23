@@ -46,6 +46,20 @@
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>
 
+// Taken from `imgui_demo.cpp`
+static void ShowHelpMarker(const char* desc)
+{
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
 // Must use conventional parameters here 
 // or else there will be an undefined reference to SDL_main
 int main(int argc, char** argv)
@@ -60,8 +74,8 @@ int main(int argc, char** argv)
     SDL_Haptic *haptic = SDL_HapticOpen(0);
     if (!haptic)
     {
-        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s",
-            "This device does not support haptic feedback\n");
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s%s",
+            "This device does not support haptic feedback\n", SDL_GetError());
     }
     else
     {
@@ -133,10 +147,12 @@ int main(int argc, char** argv)
 
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    int window_flags = ImGuiWindowFlags_NoTitleBar \
-        | ImGuiWindowFlags_NoResize \
-        | ImGuiWindowFlags_NoMove \
-        | ImGuiWindowFlags_NoScrollbar;
+    int window_flags = ImGuiWindowFlags_NoMove \
+        | ImGuiWindowFlags_NoDecoration \
+        | ImGuiWindowFlags_NoNav \
+        // don't save settings in .ini file
+        | ImGuiWindowFlags_NoSavedSettings \
+        | ImGuiWindowFlags_NoBackground;
 
     static bool window_close_widget = false;
 
@@ -149,6 +165,7 @@ int main(int argc, char** argv)
     static ImVec4 color_to_pick = ImColor(0, 0, 0, 255);
     static ImVec4 ref_color_v (1.0f, 0.0f, 1.0f, 0.5f);
 
+    // color button flags
     int misc_flags = (hdr ? ImGuiColorEditFlags_HDR : 0) \
         | (drag_and_drop ? 0 : ImGuiColorEditFlags_NoDragDrop) \
         | (alpha_half_preview ? ImGuiColorEditFlags_AlphaPreviewHalf : (alpha_preview ? ImGuiColorEditFlags_AlphaPreview : 0)) \
@@ -186,17 +203,17 @@ int main(int argc, char** argv)
         ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, io.DisplaySize.y), ImGuiSetCond_Always);
         ImGui::Begin("Hello, world!", &window_close_widget, window_flags);                          // Create a window called "Hello, world!" and append into it.
 
-        ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-        ImGui::Checkbox("Demo Window", &hdr);      // Edit bools storing our window open/close state
-        ImGui::Checkbox("Another Window", &hdr);
+        // ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+        // ImGui::Checkbox("Demo Window", &hdr);      // Edit bools storing our window open/close state
+        // ImGui::Checkbox("Another Window", &hdr);
 
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
-        ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+        // ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
+        // ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
-        if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-            counter++;
-        ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
+        // if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+            // counter++;
+        // ImGui::SameLine();
+        // ImGui::Text("counter = %d", counter);
 
         if (counter == 1) {
             if (SDL_HapticRumblePlay(haptic, 0.75, 500) != 0)
@@ -206,6 +223,7 @@ int main(int argc, char** argv)
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
         // the color to match to
+        ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.95f);
         ImGui::ColorButton("MyColor##3c", *(ImVec4*)&color_to_match, misc_flags, ImVec2(100, 100));
         // ImGui::SameLine();
         // These flags are separated because they can't all be used at once
@@ -217,7 +235,7 @@ int main(int argc, char** argv)
 
         flags |= ImGuiColorEditFlags_NoSidePreview;
         
-        flags |= ImGuiColorEditFlags_PickerHueBar;
+        // flags |= ImGuiColorEditFlags_PickerHueBar;
         // flags |= ImGuiColorEditFlags_PickerHueWheel;
 
         flags |= ImGuiColorEditFlags_NoInputs;
@@ -225,7 +243,7 @@ int main(int argc, char** argv)
         // flags |= ImGuiColorEditFlags_HSV;
         // flags |= ImGuiColorEditFlags_HEX;
         ImGui::ColorPicker4("MyColor##4", (float*)&color_to_pick, flags, &ref_color_v.x);
-
+        ImGui::PopItemWidth();
         ImGui::End();
 
 
