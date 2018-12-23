@@ -4,6 +4,34 @@
 //
 // BSD-3-Clause LICENSE
 // Zach Mertens-McConnell @github/zmertens
+//
+//
+// =======================================================
+// | (?)                                       |         |
+// |                                           |         |
+// |                                           |         |
+// |                                           |_________|
+// |                                                 |   |
+// |                                                 |   |
+// |                                                 |   |
+// |                                                 |   |
+// |                                                 |   |
+// |                                                 |   |
+// |                                                 |   |
+// |                                                 |   |
+// |                                                 |   |
+// |                                                 |   |
+// |                                                 |   |
+// |                                                 |   |
+// |                                                 |   |
+// |                                                 |   |
+// |                                                 |   |
+// |                                                 |   |
+// |                                                 |   |
+// |                                                 |   |
+// | ________________________________________________|___|
+// |                 |                |                  |
+// |                 |                |                  |
 ///////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -104,6 +132,14 @@ int main(int argc, char** argv)
     //ImGui::StyleColorsClassic();
 
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+    int window_flags = ImGuiWindowFlags_NoTitleBar \
+        | ImGuiWindowFlags_NoResize \
+        | ImGuiWindowFlags_NoMove \
+        | ImGuiWindowFlags_NoScrollbar;
+
+    static bool window_close_widget = false;
+
     static bool drag_and_drop = false;
     static bool options_menu = false;
     static bool alpha_half_preview = false;
@@ -140,35 +176,33 @@ int main(int argc, char** argv)
         ImGui_ImplSDL2_NewFrame(window);
         ImGui::NewFrame();
 
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
-        {
-            static float f = 0.0f;
-            static int counter = 0;
-            
-            ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.05, io.DisplaySize.y * 0.05), ImGuiSetCond_Once);
-            
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-    
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &hdr);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &hdr);
+        // the game window
+        static float f = 0.0f;
+        static int counter = 0;
+        
+        // ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.05, io.DisplaySize.y * 0.05), ImGuiSetCond_Once);
+        ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, io.DisplaySize.y), ImGuiSetCond_Always);
+        ImGui::Begin("Hello, world!", &window_close_widget, window_flags);                          // Create a window called "Hello, world!" and append into it.
 
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+        ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+        ImGui::Checkbox("Demo Window", &hdr);      // Edit bools storing our window open/close state
+        ImGui::Checkbox("Another Window", &hdr);
 
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
+        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
+        ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
-            if (counter == 1) {
-                if (SDL_HapticRumblePlay(haptic, 0.75, 500) != 0)
-                    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", SDL_GetError());
-            }
+        if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+            counter++;
+        ImGui::SameLine();
+        ImGui::Text("counter = %d", counter);
 
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
+        if (counter == 1) {
+            if (SDL_HapticRumblePlay(haptic, 0.75, 500) != 0)
+                SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", SDL_GetError());
         }
+
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::End();
 
         // the color to match to
         // ImGui::ColorButton("MyColor##3c", *(ImVec4*)&color_to_match, misc_flags, ImVec2(80,80));
