@@ -131,8 +131,8 @@ int main(int argc, char** argv)
     SDL_GetCurrentDisplayMode(0, &current);
     SDL_Window* window = SDL_CreateWindow(nullptr,
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-        current.w, current.h, 
-        SDL_WINDOW_OPENGL);
+        0, 0, 
+        SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_ALLOW_HIGHDPI);
     if (window == 0)
     {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to create the SDL Window: %s\n", SDL_GetError());
@@ -173,8 +173,8 @@ int main(int argc, char** argv)
 
     static bool window_close_widget = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    static ImVec4 color_to_match = get_random_rgb(0, 255, 255);
-    static ImVec4 color_to_pick = get_random_rgb(0, 255, 255);
+    static ImVec4 color_to_match = ImColor(1.f, 1.f, 1.f, 1.f);
+    static ImVec4 color_to_pick = ImColor(0.f, 0.f, 0.f, 1.f);
     static ImVec4 ref_color_v (1.0f, 0.0f, 1.0f, 0.5f);
 
     int window_flags = ImGuiWindowFlags_NoMove \
@@ -185,11 +185,11 @@ int main(int argc, char** argv)
         | ImGuiWindowFlags_NoBackground;
 
     int color_button_flags = ImGuiColorEditFlags_NoAlpha \
-        | ImGuiColorEditFlags_NoPicker \      
-        | ImGuiColorEditFlags_NoOptions \      
+        | ImGuiColorEditFlags_NoPicker \
+        | ImGuiColorEditFlags_NoOptions \ 
         | ImGuiColorEditFlags_NoSmallPreview \
         | ImGuiColorEditFlags_NoInputs \
-        | ImGuiColorEditFlags_NoTooltip \     
+        | ImGuiColorEditFlags_NoTooltip \ 
         | ImGuiColorEditFlags_NoSidePreview \
         | ImGuiColorEditFlags_NoDragDrop;
         // ImGuiColorEditFlags_HDR \
@@ -198,8 +198,6 @@ int main(int argc, char** argv)
 
     // Main loop
     bool done = false;
-    bool disable_touch = false;
-
     while (!done)
     {
         // Poll and handle events (inputs, window resize, etc.)
@@ -214,13 +212,13 @@ int main(int argc, char** argv)
 
             if (event.type == SDL_QUIT)
                 done = true;
-            // else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE 
-            //     && event.window.windowID == SDL_GetWindowID(window))
-            //         done = true;
-            // else if (event.type == SDL_WINDOWEVENT_RESIZED && event.window.windowID == SDL_GetWindowID(window)) {
-            //     SDL_GetCurrentDisplayMode(0, &current);
-            //     io.DisplaySize.x = current.w; io.DisplaySize.y = current.h;
-            // }
+            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE 
+                && event.window.windowID == SDL_GetWindowID(window))
+                    done = true;
+            else if (event.type == SDL_WINDOWEVENT_RESIZED && event.window.windowID == SDL_GetWindowID(window)) {
+                SDL_GetCurrentDisplayMode(0, &current);
+                io.DisplaySize.x = current.w; io.DisplaySize.y = current.h;
+            }
         }
 
         // Start the Dear ImGui frame
@@ -268,6 +266,9 @@ int main(int argc, char** argv)
 
         // game logic
         static float range_to_activate_haptic = 0.0899f;
+        // use this to disable gameplay while colors are reset
+        int disable_touch = 0;
+        int const TimeToWait = 100;
         if (colors_are_within_range(color_to_match.x, color_to_pick.x,
             color_to_match.y, color_to_pick.y,
             color_to_match.z, color_to_pick.z, range_to_activate_haptic))
@@ -276,9 +277,18 @@ int main(int argc, char** argv)
                 color_to_match.x, color_to_pick.x,
                 color_to_match.y, color_to_pick.y,
                 color_to_match.z, color_to_pick.z);
+            disable_touch += 1;     
+        }
+
+        if (disable_touch != TimeToWait)
+        {
             // activate haptic, reset colors, disable touch during reset
             if (SDL_HapticRumblePlay(haptic, 0.75, 500) != 0)
-                SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", SDL_GetError());        
+                SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", SDL_GetError());  
+        }
+        else
+        {
+            disable_touch = 0;
         }
 
         clear_color.x = std::sin(static_cast<float>(SDL_GetTicks()) * 0.0001f);
