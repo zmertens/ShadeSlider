@@ -48,18 +48,13 @@
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>
 
-// float get_random_float(int low, int high)
-// {
-//     static const int seed = 0;
-//     // std::random_device rd;
-//     std::mt19937_64 mt (seed);
-//     std::uniform_real_distribution<float> dist (low, high);
-//     return dist (mt);
-// }
-
-float mix(float a, float b, float t)
+float get_random_float(int low, int high)
 {
-    return a * (1.f - t) + b * t;
+    // static const int seed = 0; // time(0)
+    std::random_device rd;
+    std::mt19937_64 mt (rd());
+    std::uniform_real_distribution<float> dist (low, high);
+    return dist (mt);
 }
 
 // Taken from `imgui_demo.cpp`
@@ -69,11 +64,26 @@ static void ShowHelpMarker(const char* desc)
     if (ImGui::IsItemHovered())
     {
         ImGui::BeginTooltip();
-        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 145.0f);
         ImGui::TextUnformatted(desc);
         ImGui::PopTextWrapPos();
         ImGui::EndTooltip();
     }
+}
+
+// Check if two color vectors (r, g, b) values are within range, ignore alpha
+// color values are stored [0, 1]
+bool colors_are_within_range(const float r1, const float r2,
+    const float g1, const float g2,
+    const float b1, const float b2, float range)
+{
+    return (abs(r1 - r2) <= range && abs(g1 - g2) <= range && abs(b1 - b2) <= range);
+}
+
+ImVec4 get_random_rgb(int low, int high, float alpha)
+{
+    return ImColor(get_random_float(low, high), 
+        get_random_float(low, high), get_random_float(low, high), alpha);
 }
 
 // Must use conventional parameters here 
@@ -161,7 +171,11 @@ int main(int argc, char** argv)
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
 
+    static bool window_close_widget = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    static ImVec4 color_to_match = get_random_rgb(0, 255, 255);
+    static ImVec4 color_to_pick = get_random_rgb(0, 255, 255);
+    static ImVec4 ref_color_v (1.0f, 0.0f, 1.0f, 0.5f);
 
     int window_flags = ImGuiWindowFlags_NoMove \
         | ImGuiWindowFlags_NoDecoration \
@@ -170,26 +184,22 @@ int main(int argc, char** argv)
         | ImGuiWindowFlags_NoSavedSettings \
         | ImGuiWindowFlags_NoBackground;
 
-    static bool window_close_widget = false;
-
-    static bool drag_and_drop = false;
-    static bool options_menu = false;
-    static bool alpha_half_preview = false;
-    static bool alpha_preview = false;
-    static bool hdr = false;
-    static ImVec4 color_to_match = ImColor(255, 255, 255, 200);
-    static ImVec4 color_to_pick = ImColor(0, 0, 0, 255);
-    static ImVec4 ref_color_v (1.0f, 0.0f, 1.0f, 0.5f);
-
-    // color button flags
-    int misc_flags = (hdr ? ImGuiColorEditFlags_HDR : 0) \
-        | (drag_and_drop ? 0 : ImGuiColorEditFlags_NoDragDrop) \
-        | (alpha_half_preview ? ImGuiColorEditFlags_AlphaPreviewHalf : (alpha_preview ? ImGuiColorEditFlags_AlphaPreview : 0)) \
-        | (options_menu ? 0 : ImGuiColorEditFlags_NoOptions);
+    int color_button_flags = ImGuiColorEditFlags_NoAlpha \
+        | ImGuiColorEditFlags_NoPicker \      
+        | ImGuiColorEditFlags_NoOptions \      
+        | ImGuiColorEditFlags_NoSmallPreview \
+        | ImGuiColorEditFlags_NoInputs \
+        | ImGuiColorEditFlags_NoTooltip \     
+        | ImGuiColorEditFlags_NoSidePreview \
+        | ImGuiColorEditFlags_NoDragDrop;
+        // ImGuiColorEditFlags_HDR \
+        // | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_AlphaPreview \
 
 
     // Main loop
     bool done = false;
+    bool disable_touch = false;
+
     while (!done)
     {
         // Poll and handle events (inputs, window resize, etc.)
@@ -204,6 +214,13 @@ int main(int argc, char** argv)
 
             if (event.type == SDL_QUIT)
                 done = true;
+            // else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE 
+            //     && event.window.windowID == SDL_GetWindowID(window))
+            //         done = true;
+            // else if (event.type == SDL_WINDOWEVENT_RESIZED && event.window.windowID == SDL_GetWindowID(window)) {
+            //     SDL_GetCurrentDisplayMode(0, &current);
+            //     io.DisplaySize.x = current.w; io.DisplaySize.y = current.h;
+            // }
         }
 
         // Start the Dear ImGui frame
@@ -211,72 +228,62 @@ int main(int argc, char** argv)
         ImGui_ImplSDL2_NewFrame(window);
         ImGui::NewFrame();
 
-        // the game window
-        static float f = 0.0f;
-        static int counter = 0;
-        
+        // the game windows
         ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_Always);
         ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, io.DisplaySize.y), ImGuiSetCond_Always);
         ImGui::Begin("Hello, world!", &window_close_widget, window_flags);                          // Create a window called "Hello, world!" and append into it.
-        ShowHelpMarker("This is a help marker. Match the colors");
-        // ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-        // ImGui::Checkbox("Demo Window", &hdr);      // Edit bools storing our window open/close state
-        // ImGui::Checkbox("Another Window", &hdr);
-
-        // ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
-        // ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-        // if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-            // counter++;
-        // ImGui::SameLine();
-        // ImGui::Text("counter = %d", counter);
-
-        if (counter == 1) {
-            if (SDL_HapticRumblePlay(haptic, 0.75, 500) != 0)
-                SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", SDL_GetError());
-        }
-
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ShowHelpMarker("Use the color picker to make the box on the right look like the box on the left");
+        ImGui::SameLine();
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 
+            1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
         // the color to match to
-        ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.95f);
-        ImGui::ColorButton("MyColor##3c", *(ImVec4*)&color_to_match, misc_flags, ImVec2(100, 100));
+        ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.98f);
+        ImGui::ColorButton("MyColor##3c", *(ImVec4*)&color_to_match, 
+            color_button_flags, ImVec2(ImGui::GetWindowWidth() * 0.50f, 128));
         ImGui::SameLine();
-        ImGui::ColorButton("MyColor##4c", *(ImVec4*)&color_to_pick, misc_flags, ImVec2(100, 100));
+        ImGui::ColorButton("MyColor##4c", *(ImVec4*)&color_to_pick, 
+            color_button_flags, ImVec2(ImGui::GetWindowWidth() * 0.50f, 128));
         // ImGui::SameLine();
         // These flags are separated because they can't all be used at once
         // See imgui_widgets.cpp:4100 `ImIsPowerOfTwo` assertion
-        ImGuiColorEditFlags flags;
+        ImGuiColorEditFlags color_picker_flags;
         // This is by default if you call ColorPicker3() instead of ColorPicker4()
-        flags |= ImGuiColorEditFlags_NoAlpha;
+        color_picker_flags |= ImGuiColorEditFlags_NoAlpha;
         // flags |= ImGuiColorEditFlags_AlphaBar;
-        flags |= ImGuiColorEditFlags_NoLabel;
+        color_picker_flags |= ImGuiColorEditFlags_NoLabel;
 
-        flags |= ImGuiColorEditFlags_NoSidePreview;
+        color_picker_flags |= ImGuiColorEditFlags_NoSidePreview;
         
-        // flags |= ImGuiColorEditFlags_PickerHueBar;
-        // flags |= ImGuiColorEditFlags_PickerHueWheel;
+        // color_picker_flags |= ImGuiColorEditFlags_PickerHueBar;
+        // color_picker_flags |= ImGuiColorEditFlags_PickerHueWheel;
 
-        flags |= ImGuiColorEditFlags_NoInputs;
-        // flags |= ImGuiColorEditFlags_RGB;
-        // flags |= ImGuiColorEditFlags_HSV;
-        // flags |= ImGuiColorEditFlags_HEX;
-        ImGui::ColorPicker4("MyColor##4", (float*)&color_to_pick, flags, &ref_color_v.x);
+        color_picker_flags |= ImGuiColorEditFlags_NoInputs;
+        // color_picker_flags |= ImGuiColorEditFlags_RGB;
+        // color_picker_flags |= ImGuiColorEditFlags_HSV;
+        // color_picker_flags |= ImGuiColorEditFlags_HEX;
+        ImGui::ColorPicker4("MyColor##4", (float*)&color_to_pick, color_picker_flags, &ref_color_v.x);
         ImGui::PopItemWidth();
         ImGui::End();
 
-        if (clear_color.x < 1.f)
+        // game logic
+        static float range_to_activate_haptic = 0.0899f;
+        if (colors_are_within_range(color_to_match.x, color_to_pick.x,
+            color_to_match.y, color_to_pick.y,
+            color_to_match.z, color_to_pick.z, range_to_activate_haptic))
         {
-            clear_color.x += static_cast<float>(SDL_GetTicks());
-            clear_color.y += static_cast<float>(SDL_GetTicks());
-            clear_color.z += static_cast<float>(SDL_GetTicks());
+            SDL_Log("%s\n%f | %f\n%f | %f\n%f | %f\n", "COLORS ARE WITHIN RANGE",
+                color_to_match.x, color_to_pick.x,
+                color_to_match.y, color_to_pick.y,
+                color_to_match.z, color_to_pick.z);
+            // activate haptic, reset colors, disable touch during reset
+            if (SDL_HapticRumblePlay(haptic, 0.75, 500) != 0)
+                SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", SDL_GetError());        
         }
-        else
-        {
-            clear_color.x -= static_cast<float>(SDL_GetTicks());
-            clear_color.y -= static_cast<float>(SDL_GetTicks());
-            clear_color.z -= static_cast<float>(SDL_GetTicks());
-        }
+
+        clear_color.x = std::sin(static_cast<float>(SDL_GetTicks()) * 0.0001f);
+        clear_color.y = std::cos(static_cast<float>(SDL_GetTicks()) * 0.0001f);
+        clear_color.z = std::sin(static_cast<float>(SDL_GetTicks()) * 0.0001f);
 
         glViewport(0, 0, (int) io.DisplaySize.x, (int) io.DisplaySize.y);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
