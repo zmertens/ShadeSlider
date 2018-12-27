@@ -36,6 +36,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include <random>
 
@@ -72,18 +73,20 @@ static void ShowHelpMarker(const char* desc)
 }
 
 // Check if two color vectors (r, g, b) values are within range, ignore alpha
-// color values are stored [0, 1]
+// color values are stored [0, 1], so we scale the range by 255 to make it easier in my head
 bool colors_are_within_range(const float r1, const float r2,
     const float g1, const float g2,
-    const float b1, const float b2, float range)
+    const float b1, const float b2, const float range)
 {
-    return (abs(r1 - r2) <= range && abs(g1 - g2) <= range && abs(b1 - b2) <= range);
+    return std::sqrt(
+        std::pow(r2 - r1, 2) + std::pow(g2 - g1, 2)+ std::pow(b2 - b1, 2)) <= (range / 255.f);
 }
 
 ImVec4 get_random_rgb(int low, int high, float alpha)
 {
-    return ImColor(get_random_float(low, high), 
-        get_random_float(low, high), get_random_float(low, high), alpha);
+    return ImColor(
+        get_random_float(low, high), get_random_float(low, high), get_random_float(low, high),
+        alpha);
 }
 
 // Must use conventional parameters here 
@@ -173,8 +176,10 @@ int main(int argc, char** argv)
 
     static bool window_close_widget = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    static ImVec4 color_to_match = ImColor(1.f, 1.f, 1.f, 1.f);
-    static ImVec4 color_to_pick = ImColor(0.f, 0.f, 0.f, 1.f);
+    // Pick colors that won't trigger the haptic
+    // haptic triggers when user the user is within 1-hundreth of number for all x, y, z values
+    static ImVec4 color_to_match = ImColor(0.655f, 0.245f, 0.100f, 1.f);
+    static ImVec4 color_to_pick = ImColor(0.5f, 0.5f, 0.5f, 1.f);
     static ImVec4 ref_color_v (1.0f, 0.0f, 1.0f, 0.5f);
 
     int window_flags = ImGuiWindowFlags_NoMove \
@@ -195,6 +200,23 @@ int main(int argc, char** argv)
         // ImGuiColorEditFlags_HDR \
         // | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_AlphaPreview \
 
+    // These flags are separated because they can't all be used at once
+    // See imgui_widgets.cpp:4100 `ImIsPowerOfTwo` assertion
+    ImGuiColorEditFlags color_picker_flags;
+    // This is by default if you call ColorPicker3() instead of ColorPicker4()
+    color_picker_flags |= ImGuiColorEditFlags_NoAlpha;
+    // flags |= ImGuiColorEditFlags_AlphaBar;
+    color_picker_flags |= ImGuiColorEditFlags_NoLabel;
+
+    color_picker_flags |= ImGuiColorEditFlags_NoSidePreview;
+    
+    // color_picker_flags |= ImGuiColorEditFlags_PickerHueBar;
+    color_picker_flags |= ImGuiColorEditFlags_PickerHueWheel;
+
+    color_picker_flags |= ImGuiColorEditFlags_NoInputs;
+    // color_picker_flags |= ImGuiColorEditFlags_RGB;
+    // color_picker_flags |= ImGuiColorEditFlags_HSV;
+    // color_picker_flags |= ImGuiColorEditFlags_HEX;
 
     // Main loop
     bool done = false;
@@ -212,12 +234,17 @@ int main(int argc, char** argv)
 
             if (event.type == SDL_QUIT)
                 done = true;
-            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE 
-                && event.window.windowID == SDL_GetWindowID(window))
-                    done = true;
-            else if (event.type == SDL_WINDOWEVENT_RESIZED && event.window.windowID == SDL_GetWindowID(window)) {
+            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
+            {
+                done = true;
+                SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "\n\nSDL Window is closing!!\n\n");
+            }
+            else if (event.type == SDL_WINDOWEVENT_RESIZED && event.window.windowID == SDL_GetWindowID(window))
+            {
                 SDL_GetCurrentDisplayMode(0, &current);
                 io.DisplaySize.x = current.w; io.DisplaySize.y = current.h;
+                SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+                    "Resize Event:\ncurrent.w: %d, current.h: %d", current.w, current.h);
             }
         }
 
@@ -240,60 +267,65 @@ int main(int argc, char** argv)
         ImGui::ColorButton("MyColor##3c", *(ImVec4*)&color_to_match, 
             color_button_flags, ImVec2(ImGui::GetWindowWidth() * 0.50f, 128));
         ImGui::SameLine();
+        // the current color getting picked
         ImGui::ColorButton("MyColor##4c", *(ImVec4*)&color_to_pick, 
             color_button_flags, ImVec2(ImGui::GetWindowWidth() * 0.50f, 128));
         // ImGui::SameLine();
-        // These flags are separated because they can't all be used at once
-        // See imgui_widgets.cpp:4100 `ImIsPowerOfTwo` assertion
-        ImGuiColorEditFlags color_picker_flags;
-        // This is by default if you call ColorPicker3() instead of ColorPicker4()
-        color_picker_flags |= ImGuiColorEditFlags_NoAlpha;
-        // flags |= ImGuiColorEditFlags_AlphaBar;
-        color_picker_flags |= ImGuiColorEditFlags_NoLabel;
-
-        color_picker_flags |= ImGuiColorEditFlags_NoSidePreview;
-        
-        // color_picker_flags |= ImGuiColorEditFlags_PickerHueBar;
-        // color_picker_flags |= ImGuiColorEditFlags_PickerHueWheel;
-
-        color_picker_flags |= ImGuiColorEditFlags_NoInputs;
-        // color_picker_flags |= ImGuiColorEditFlags_RGB;
-        // color_picker_flags |= ImGuiColorEditFlags_HSV;
-        // color_picker_flags |= ImGuiColorEditFlags_HEX;
         ImGui::ColorPicker4("MyColor##4", (float*)&color_to_pick, color_picker_flags, &ref_color_v.x);
         ImGui::PopItemWidth();
         ImGui::End();
 
+       SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+            "\ncolor_to_match.x: %f\ncolor_to_match.y: %f\ncolor_to_match.z: %f \\
+            \ncolor_to_pick.x: %f\ncolor_to_pick.y: %f\ncolor_to_pick.z: %f\n",
+            color_to_match.x, color_to_match.y, color_to_match.z,
+            color_to_pick.x, color_to_pick.y, color_to_pick.z);
+
         // game logic
         static float range_to_activate_haptic = 0.0899f;
         // use this to disable gameplay while colors are reset
-        int disable_touch = 0;
-        int const TimeToWait = 100;
+        int time_to_vibrate = 0;
+        int const const_max_vibrate = 3000; // 3 seconds
+        static bool create_new_color = false;
         if (colors_are_within_range(color_to_match.x, color_to_pick.x,
             color_to_match.y, color_to_pick.y,
             color_to_match.z, color_to_pick.z, range_to_activate_haptic))
         {
-            SDL_Log("%s\n%f | %f\n%f | %f\n%f | %f\n", "COLORS ARE WITHIN RANGE",
-                color_to_match.x, color_to_pick.x,
-                color_to_match.y, color_to_pick.y,
-                color_to_match.z, color_to_pick.z);
-            disable_touch += 1;     
+            SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "\n\n\nCOLORS ARE WITHIN RANGE\n\n\n\n");
+            time_to_vibrate += 1;   
+            create_new_color = !create_new_color;  
         }
 
-        if (disable_touch != TimeToWait)
+        if (create_new_color)
         {
+            create_new_color = !create_new_color;
+            // create new colors
+            // color_to_match = get_random_rgb(0, 1, 1.f);
+            // color_to_pick = get_random_rgb(0, 1, 1.f);
+        }
+
+        // When the user gets within range of the match colors,
+        // let the vibrate go for 2-3 seconds and reset
+        if (!time_to_vibrate && time_to_vibrate <= const_max_vibrate)
+        {
+            time_to_vibrate += 1;
             // activate haptic, reset colors, disable touch during reset
             if (SDL_HapticRumblePlay(haptic, 0.75, 500) != 0)
                 SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", SDL_GetError());  
         }
         else
         {
-            disable_touch = 0;
+            time_to_vibrate = 0;
         }
 
         clear_color.x = std::sin(static_cast<float>(SDL_GetTicks()) * 0.0001f);
         clear_color.y = std::cos(static_cast<float>(SDL_GetTicks()) * 0.0001f);
         clear_color.z = std::sin(static_cast<float>(SDL_GetTicks()) * 0.0001f);
+
+        // SDL_GetCurrentDisplayMode(0, &current);
+        // io.DisplaySize.x = current.w; io.DisplaySize.y = current.h;
+        // SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+        //     "current.w: %d,\tcurrent.h: %d", current.w, current.h);
 
         glViewport(0, 0, (int) io.DisplaySize.x, (int) io.DisplaySize.y);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
