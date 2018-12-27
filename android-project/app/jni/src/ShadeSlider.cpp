@@ -310,8 +310,8 @@ int main(int argc, char** argv)
         {
             time_to_vibrate += 1;
             // activate haptic, reset colors, disable touch during reset
-            if (SDL_HapticRumblePlay(haptic, 0.75, 500) != 0)
-                SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", SDL_GetError());  
+            // if (SDL_HapticRumblePlay(haptic, 0.75, 500) != 0)
+                // SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", SDL_GetError());  
         }
         else
         {
