@@ -34,6 +34,8 @@ android:
 before_script:
   # Create and start emulator
   - yes | sdkmanager "platforms;android-26"
+  - bash setup.sh
+  - cd ./android-project
 
 # Gradle-specific caching technique
 before_cache:
@@ -45,4 +47,4 @@ cache:
     - $HOME/.gradle/wrapper/
     - $HOME/.android/build-cache
 
-script: bash setup.sh && cd ./android-project && ./gradlew build connectedCheck
+script: ./gradlew build connectedCheck
