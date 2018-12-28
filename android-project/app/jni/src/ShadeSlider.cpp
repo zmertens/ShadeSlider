@@ -84,13 +84,6 @@ bool colors_are_within_range(const float r1, const float r2,
         return false;
 }
 
-ImVec4 get_random_rgb(int low, int high, float alpha)
-{
-    return ImColor(
-        get_random_float(low, high), get_random_float(low, high), get_random_float(low, high),
-        alpha);
-}
-
 // Must use conventional parameters here 
 // or else there will be an undefined reference to SDL_main
 int main(int argc, char** argv)
@@ -299,10 +292,14 @@ int main(int argc, char** argv)
         {
             create_new_color = !create_new_color;
             // create new colors
-            // color_to_match = get_random_rgb(0, 1, 1.f);
-            // color_to_pick = get_random_rgb(0, 1, 1.f);
+            color_to_match.x = get_random_float(0, 1);
+            color_to_match.y = get_random_float(0, 1);
+            color_to_match.x = get_random_float(0, 1);
+            color_to_pick.x = get_random_float(0, 1);
+            color_to_pick.y = get_random_float(0, 1);
+            color_to_pick.z = get_random_float(0, 1);
             if (SDL_HapticRumblePlay(haptic, 0.69, 2000) != 0)
-                SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", SDL_GetError()); 
+                SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Haptic Error: %s", SDL_GetError()); 
         }
 
         clear_color.x = std::sin(static_cast<float>(SDL_GetTicks()) * 0.0001f);
