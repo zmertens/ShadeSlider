@@ -252,8 +252,8 @@ int main(int argc, char** argv)
         ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_Always);
         ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, io.DisplaySize.y), ImGuiSetCond_Always);
         ImGui::Begin("Hello, world!", &window_close_widget, window_flags);                          // Create a window called "Hello, world!" and append into it.
-        ShowHelpMarker("Use the color picker to make the box on the right look like the box on the left");
-        ImGui::SameLine();
+        // ShowHelpMarker("Use the color picker to make the box on the right look like the box on the left");
+        // ImGui::SameLine();
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 
             1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
@@ -268,9 +268,13 @@ int main(int argc, char** argv)
         // ImGui::SameLine();
         ImGui::ColorPicker4("MyColor##4", (float*)&color_to_pick, color_picker_flags, &ref_color_v.x);
         ImGui::PopItemWidth();
+        
+        ImGui::Text("Make the phone vibrate!"); 
+        ImGui::Text("Slide the color wheel around and get the colors to match");
+        
         ImGui::End();
 
-       SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+        SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
             "\ncolor_to_match.x: %f\ncolor_to_match.y: %f\ncolor_to_match.z: %f \\
             \ncolor_to_pick.x: %f\ncolor_to_pick.y: %f\ncolor_to_pick.z: %f\n",
             color_to_match.x * 255.f, color_to_match.y * 255.f, color_to_match.z * 255.f,
