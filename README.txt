@@ -9,10 +9,14 @@ Android SDK+NDK. You don't need Android Studio but it makes updating easier!
         - `export PATH=$PATH:~/Android/android-ndk-r15c`
         - `export PATH=$PATH:~/Android/Sdk/platform-tools`
         - `export PATH=$PATH:~/Android/Sdk/tools`
-        You should be able to run `ndk-build`, `adb`, and `android` commands in terminal.
-    4. See the `build_android.sh` script within the directory for commands to build and deploy
+        You should be able to run `adb logcat`, and `android` commands in terminal.
+    4. Gradle Wrapper commands (from top-level android-project directory)
+        - `./gradlew installDebug`, `./gradlew assemble`, `./gradlew build connectedCheck`,
+        `./gradlew connectedAndroidTest`, `./gradlew clean`, `./gradlew test`
+    5. adb commands: `adb devices`, `adb logcat`
 
-[Download on Itch.IO](itch.io)
+See the GitHub release section for a downloadable APK
+https://github.com/zmertens/ShadeSlider/releases/tag/1.0
 
 ## References and Links
  - [Android Asset Studio, Icon Generator](https://romannurik.github.io/AndroidAssetStudio/index.html)
