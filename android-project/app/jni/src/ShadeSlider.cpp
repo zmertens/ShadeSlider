@@ -73,13 +73,15 @@ static void ShowHelpMarker(const char* desc)
 }
 
 // Check if two color vectors (r, g, b) values are within range, ignore alpha
-// color values are stored [0, 1], so we scale the range by 255 to make it easier in my head
+// color values are stored [0, 1], so we scale the range by 255 before calling function
 bool colors_are_within_range(const float r1, const float r2,
     const float g1, const float g2,
     const float b1, const float b2, const float range)
 {
-    return std::sqrt(
-        std::pow(r2 - r1, 2) + std::pow(g2 - g1, 2)+ std::pow(b2 - b1, 2)) <= (range / 255.f);
+    if (std::abs(r2 - r1) <= range && std::abs(g2 - g1) <= range && std::abs(b2 - b1) <= range)
+        return true;
+    else
+        return false;
 }
 
 ImVec4 get_random_rgb(int low, int high, float alpha)
@@ -278,44 +280,29 @@ int main(int argc, char** argv)
        SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
             "\ncolor_to_match.x: %f\ncolor_to_match.y: %f\ncolor_to_match.z: %f \\
             \ncolor_to_pick.x: %f\ncolor_to_pick.y: %f\ncolor_to_pick.z: %f\n",
-            color_to_match.x, color_to_match.y, color_to_match.z,
-            color_to_pick.x, color_to_pick.y, color_to_pick.z);
+            color_to_match.x * 255.f, color_to_match.y * 255.f, color_to_match.z * 255.f,
+            color_to_pick.x * 255.f, color_to_pick.y * 255.f, color_to_pick.z * 255.f);
 
         // game logic
-        static float range_to_activate_haptic = 0.0899f;
-        // use this to disable gameplay while colors are reset
-        int time_to_vibrate = 0;
-        int const const_max_vibrate = 3000; // 3 seconds
+        static float range_to_activate_haptic = 25.0f;
         static bool create_new_color = false;
-        if (colors_are_within_range(color_to_match.x, color_to_pick.x,
-            color_to_match.y, color_to_pick.y,
-            color_to_match.z, color_to_pick.z, range_to_activate_haptic))
+        if (colors_are_within_range(color_to_match.x * 255.f, color_to_pick.x * 255.f,
+            color_to_match.y * 255.f, color_to_pick.y * 255.f,
+            color_to_match.z * 255.f, color_to_pick.z * 255.f, range_to_activate_haptic))
         {
-            SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "\n\n\nCOLORS ARE WITHIN RANGE\n\n\n\n");
-            time_to_vibrate += 1;   
+            SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "\n\n\nCOLORS ARE WITHIN RANGE\n\n\n\n");  
             create_new_color = !create_new_color;  
         }
 
+        // activate haptic, reset colors, disable touch during reset
         if (create_new_color)
         {
             create_new_color = !create_new_color;
             // create new colors
             // color_to_match = get_random_rgb(0, 1, 1.f);
             // color_to_pick = get_random_rgb(0, 1, 1.f);
-        }
-
-        // When the user gets within range of the match colors,
-        // let the vibrate go for 2-3 seconds and reset
-        if (!time_to_vibrate && time_to_vibrate <= const_max_vibrate)
-        {
-            time_to_vibrate += 1;
-            // activate haptic, reset colors, disable touch during reset
-            // if (SDL_HapticRumblePlay(haptic, 0.75, 500) != 0)
-                // SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", SDL_GetError());  
-        }
-        else
-        {
-            time_to_vibrate = 0;
+            if (SDL_HapticRumblePlay(haptic, 0.69, 2000) != 0)
+                SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", SDL_GetError()); 
         }
 
         clear_color.x = std::sin(static_cast<float>(SDL_GetTicks()) * 0.0001f);
