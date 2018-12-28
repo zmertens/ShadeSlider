@@ -63,3 +63,9 @@ fastlane/Preview.html
 fastlane/screenshots
 fastlane/test_output
 fastlane/readme.md
+
+# SimpleDirectMediaLayer lib
+SDL*
+
+# More files to ignore
+android-project/.settings
