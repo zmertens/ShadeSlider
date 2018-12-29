@@ -1,5 +1,6 @@
 ## Shade Slider
 This game is about using a color picker to try and match the color with a reference image
+https://i.imgur.com/NG5zh0I.gifv
 
 ## Install and Play
 Android SDK+NDK. You don't need Android Studio but it makes updating easier!

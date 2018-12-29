@@ -32,8 +32,8 @@ android:
     - sys-img-armeabi-v7a-android-17
 
 before_script:
-  # Create and start emulator
-  - yes | sdkmanager "platforms;android-26"
+  - yes | sdkmanager "platforms;android-28"
+  - yes | sdkmanager "ndk-bundle"
   - bash setup.sh
   - cd ./android-project
 

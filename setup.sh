@@ -12,4 +12,5 @@ SDL2_LATEST='https://www.libsdl.org/release/SDL2-2.0.9.tar.gz'
 wget $SDL2_LATEST && tar xzf SDL2-2.0.9.tar.gz
 # Use -rn to ensure we don't clobber existing files
 cp -rn ./SDL2-2.0.9/android-project/* ./android-project
-mv -n ./SDL2-2.0.9 ./android_project/app/jni/SDL
+mv -n SDL2-2.0.9 android-project/app/jni/SDL
+# mv ./android-project/app/jni/SDL2-2.0.9 ./android-project/app/jni/SDL
