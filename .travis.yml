@@ -33,7 +33,7 @@ android:
 
 before_script:
   # Create and start emulator
-  - yes | sdkmanager "platforms;android-26;android-28"
+  - yes | sdkmanager "platforms;android-28"
   - bash setup.sh
   - cd ./android-project
 
