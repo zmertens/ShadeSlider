@@ -69,3 +69,6 @@ SDL*
 
 # More files to ignore
 android-project/.settings
+android-project/.project
+android-project/keystore.properties
+android-project/ShadeSlider_release_key.jks
