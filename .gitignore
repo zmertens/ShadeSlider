@@ -69,3 +69,4 @@ SDL*
 
 # More files to ignore
 android-project/.settings
+android-project/.project
