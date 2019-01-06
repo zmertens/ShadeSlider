@@ -21,3 +21,4 @@ https://github.com/zmertens/ShadeSlider/releases/tag/1.0
 
 ## References and Links
  - [Android Asset Studio, Icon Generator](https://romannurik.github.io/AndroidAssetStudio/index.html)
+ - Keytool signing https://developer.android.com/studio/publish/app-signing#secure-key
