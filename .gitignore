@@ -64,8 +64,9 @@ fastlane/screenshots
 fastlane/test_output
 fastlane/readme.md
 
-# SimpleDirectMediaLayer lib
-SDL*
+# Godot stuff
+*.csproj.old*
+.godot/
 
 # More files to ignore
 android-project/.settings

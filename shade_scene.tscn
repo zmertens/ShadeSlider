@@ -1,0 +1,87 @@
+[gd_scene load_steps=5 format=3 uid="uid://nuompckqagkf"]
+
+[ext_resource type="Shader" path="res://shaders/cineshader_lava.gdshader" id="2_83bbl"]
+[ext_resource type="Texture2D" uid="uid://10vd3aqj8o0g" path="res://icon.svg" id="3_q1bee"]
+
+[sub_resource type="CSharpScript" id="CSharpScript_k5i21"]
+script/source = "using Godot;
+using System;
+
+public partial class SlideShader : Control
+{
+	private ShaderMaterial _color_rect_material;
+
+	// Called when the node enters the scene tree for the first time.
+	public override void _Ready()
+	{
+			ColorRect _color_rect = GetNode<ColorRect>(\"Camera2D/CanvasLayer/ColorRect\");
+			_color_rect_material = _color_rect.Material as ShaderMaterial;
+			if (mat == null) {
+				GD.Print(\"Error getting shader material\");
+			}
+			// mat.SetShaderParameter(\"base\", new Vector4(0.5f, 0.3f, 0.2f, 1.0f));
+	}
+
+	// Called every frame. 'delta' is the elapsed time since the previous frame.
+	public override void _Process(double delta)
+	{
+		
+	}
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_da38p"]
+shader = ExtResource("2_83bbl")
+
+[node name="ScreenShaders" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("CSharpScript_k5i21")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="Camera2D"]
+
+[node name="ColorRect" type="ColorRect" parent="Camera2D/CanvasLayer"]
+material = SubResource("ShaderMaterial_da38p")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 2.0
+offset_top = -3.0
+offset_right = 2.0
+offset_bottom = -3.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HSlider" type="HSlider" parent="Camera2D"]
+offset_left = -462.0
+offset_top = 181.0
+offset_right = 130.72
+offset_bottom = 274.67
+scale = Vector2(1.555, 1.555)
+size_flags_vertical = 1
+
+[node name="Icon" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(-287, 134)
+texture = ExtResource("3_q1bee")
+
+[node name="Icon2" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(393, -109)
+texture = ExtResource("3_q1bee")
+
+[node name="Icon3" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(321, 273)
+texture = ExtResource("3_q1bee")
+
+[node name="Icon4" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(74, -134)
+texture = ExtResource("3_q1bee")
